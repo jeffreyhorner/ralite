@@ -18,6 +18,7 @@
 #include <R_ext/Rdynload.h>
      
 SEXP runHTTPD(SEXP host, SEXP port, SEXP handler){
+	return NULL;
 }
 
 R_CallMethodDef callMethods[]  = {
@@ -28,6 +29,8 @@ R_CallMethodDef callMethods[]  = {
 void R_init_httpd(DllInfo *info) {
 	R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 	R_useDynamicSymbols(info, FALSE);
+
+	apr_initialize();
 }
      
 void R_unload_httpd(DllInfo *info) {
