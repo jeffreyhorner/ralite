@@ -18,7 +18,7 @@
 #include <R_ext/Rdynload.h>
      
 SEXP runHTTPD(SEXP host, SEXP port, SEXP handler){
-	return NULL;
+	return host;
 }
 
 R_CallMethodDef callMethods[]  = {
