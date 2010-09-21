@@ -1,12 +1,12 @@
-\name{httpd}
-\alias{httpd}
+\name{ralite}
+\alias{ralite}
 \title{A simple robust iterative web server for R.
 }
 \description{
 Provides a web server and development environment for R.
 }
 \usage{
-httpd(host = "127.0.0.1", port = 8181, handler = function(req) {
+ralite(host = "127.0.0.1", port = 8181, handler = function(req) {
     setContentType("text/html")
     cat("<h1>Hello World!</h1>")
 })

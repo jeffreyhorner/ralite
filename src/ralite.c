@@ -17,21 +17,21 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
      
-SEXP runHTTPD(SEXP host, SEXP port, SEXP handler){
+SEXP runRALITE(SEXP host, SEXP port, SEXP handler){
 	return host;
 }
 
 R_CallMethodDef callMethods[]  = {
-	{"runHTTPD", (DL_FUNC) &runHTTPD, 3},
+	{"runRALITE", (DL_FUNC) &runRALITE, 3},
 	{NULL, NULL, 0}
 };
 
-void R_init_httpd(DllInfo *info) {
+void R_init_ralite(DllInfo *info) {
 	R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 	R_useDynamicSymbols(info, FALSE);
 
 	apr_initialize();
 }
      
-void R_unload_httpd(DllInfo *info) {
+void R_unload_ralite(DllInfo *info) {
 }

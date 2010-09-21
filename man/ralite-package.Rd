@@ -1,5 +1,5 @@
-\name{httpd-package}
-\alias{httpd-package}
+\name{ralite-package}
+\alias{ralite-package}
 \docType{package}
 \title{
 A simple robust iterative web server for R
@@ -9,7 +9,7 @@ Provides a web server and development environment for R.
 }
 \details{
 \tabular{ll}{
-Package: \tab httpd\cr
+Package: \tab ralite\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
 Date: \tab 2010-09-15\cr

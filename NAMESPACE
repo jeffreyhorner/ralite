@@ -1,2 +1,2 @@
 exportPattern("^[[:alpha:]]+")
-useDynLib("httpd",runHTTPD)
+useDynLib("ralite",runRALITE)
