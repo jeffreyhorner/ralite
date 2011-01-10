@@ -27,15 +27,18 @@
 #include <Rinterface.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
+#include <R_ext/Error.h>
 
-typedef struct ra_module_rec;
-typedef struct ra_server_rec;
 
 #define MAX_SERVER_LIMIT 200000
 
-struct {
+
+typedef struct ra_module_rec ra_module_rec_t;
+typedef struct ra_server_rec ra_server_rec_t;
+
+struct ra_module_rec {
 	apr_pool_t *pool;
-	ra_server_rec *server;
+	ra_server_rec_t *server;
 
 	/* R Interface variables and function that are saved while executing ralite */
 	Rboolean R_Interactive;
@@ -71,34 +74,35 @@ struct {
 	/* Servers spawned */
 	int server_pids_top;
 	pid_t server_pids[MAX_SERVER_LIMIT];
-} ra_module_rec;
+};
 
-struct {
+struct ra_server_rec {
+	apr_pool_t *pool;
 	char *host;
 	int port;
 	SEXP handler;
 	apr_socket_t *socket;
-} ra_server_rec;
+};
 
-ra_module_rec *ralite;
+ra_module_rec_t *ralite;
 
-static void become_ralite(ra_module_rec *ralite);
-static void become_R(ra_module_rec *ralite);
-static void spawn_servers(ra_module_rec *ralite,char *host, 
+static void become_ralite(ra_module_rec_t *ralite);
+static void become_R(ra_module_rec_t *ralite);
+static void spawn_servers(ra_module_rec_t *ralite,const char *host, 
 	int port, SEXP handler, int numservers);
-static void reap_servers(ra_module_rec *ralite);
-static void dispatch_server(ra_modul_rec *ralite, char *host,int port,SEXP handler);
+static void reap_servers(ra_module_rec_t *ralite);
+static void dispatch_server(ra_module_rec_t *ralite, const char *host,int port,SEXP handler);
 
-static void ra_handle_usr(int dummy){ signal(dummy,ra_handle_usr) };
-static void ra_handle_pipe(int dummy){ signal(dummy,ra_handle_pipe) };
+static void ra_handle_usr(int dummy){ signal(dummy,ra_handle_usr); }
+static void ra_handle_pipe(int dummy){ signal(dummy,ra_handle_pipe); }
 static void ra_handle_int(int dummy);
 
 SEXP runRALITE(SEXP host, SEXP port, SEXP handler);
 
 static void Suicide(const char *s){ };
-static void ShowMessage(const char *s);
-static int ReadConsole(const char *, unsigned char *, int, int);
-static void WriteConsoleEx(const char *, int, int);
+static void ShowMessage(const char *s){ };
+static int ReadConsole(const char *prompt, unsigned char *buf, int len, int hist){ };
+static void WriteConsoleEx(const char *buf, int len, int otype){ };
 static void WriteConsoleStderr(const char *, int, int);
 static void WriteConsoleErrorOnly(const char *, int, int);
 static void NoOpConsole(){ };

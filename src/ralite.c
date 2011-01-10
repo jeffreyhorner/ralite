@@ -1,8 +1,9 @@
 #include "ralite.h"
+#include <unistd.h>
 
 #define RA_SAVE(x) ralite->x = x
 #define RA_RESTORE(x) x = ralite->x
-static void become_ralite(ra_module_rec *ralite){
+static void become_ralite(ra_module_rec_t *ralite){
 
 	RA_SAVE(R_Interactive);
 	RA_SAVE(R_Consolefile);
@@ -48,7 +49,7 @@ static void become_ralite(ra_module_rec *ralite){
 #endif
 }
 
-static void become_R(ra_module_rec *ralite){
+static void become_R(ra_module_rec_t *ralite){
 
 	RA_RESTORE(R_Interactive);
 	RA_RESTORE(R_Consolefile);
@@ -84,12 +85,12 @@ static void ra_handle_int(int dummy){
 }
 
 #ifndef WIN32
-void spawn_servers(ra_module_rec *ralite,char *host, 
+void spawn_servers(ra_module_rec_t *ralite,const char *host, 
 		int port, SEXP handler, int numservers ){
 	int i, pid;
 
 	if (numservers > MAX_SERVER_LIMIT){
-		stop("Too many servers! Try a bit less.");
+		error("Too many servers! Try a bit less.");
 	}
 
 	for (i=0; i<numservers;i++){
@@ -108,59 +109,59 @@ void spawn_servers(ra_module_rec *ralite,char *host,
 }
 #endif
 
-void dispatch_server(ra_module_rec *ralite, char *host, int port, SEXP handler){
+void dispatch_server(ra_module_rec_t *ralite, const char *host, int port, SEXP handler){
 	apr_pool_t *newpool;
 	apr_status_t rv;
-	ra_server_rec *server;
+	ra_server_rec_t *server;
 	apr_socket_t *socket;
 	apr_sockaddr_t *listenaddr;
 
 	if (apr_pool_create(&newpool,ralite->pool) != APR_SUCCESS){
 		Free(ralite);
 		fprintf(stderr,"FATAL ERROR! apr_pool_create failed!");
-		return();
+		return;
 	}
 
-	server = apr_palloc(newpool,sizeof(ra_server_rec));
+	server = apr_palloc(newpool,sizeof(ra_server_rec_t));
 	server->host = apr_pstrdup(newpool,host);
 	server->port = port;
-	server->handler = R_PreserveObject(handler);
+	server->handler = handler; R_PreserveObject(handler);
 	server->pool = newpool;
 	ralite->server = server;
 
 	rv = apr_socket_create(&server->socket, APR_INET, SOCK_STREAM,
 			APR_PROTO_TCP, server->pool);
 	if (rv != APR_SUCCESS){
-		fprintf(stderr,"Socket allocation failed!!!\n")
-		apr_pool_destry(server->pool);
-		return();
+		fprintf(stderr,"Socket allocation failed!!!\n");
+		apr_pool_destroy(server->pool);
+		return;
 	}
 
 	rv = apr_sockaddr_info_get(&listenaddr, server->host, APR_UNSPEC, server->port,
 			APR_IPV4_ADDR_OK, server->pool);
 	if (rv != APR_SUCCESS){
 		fprintf(stderr,"apr_sockaddr_info_get failed for %s!!!\n",server->host);
-		apr_pool_destry(server->pool);
-		return();
+		apr_pool_destroy(server->pool);
+		return;
 	}
 
 	rv = apr_socket_bind(server->socket,listenaddr);
 	if (rv != APR_SUCCESS){
 		fprintf(stderr,"Bind failed!!!\n");
-		apr_pool_destry(server->pool);
-		return();
+		apr_pool_destroy(server->pool);
+		return;
 	}
 
 	rv = apr_socket_listen(server->socket,0);
 	if (rv != APR_SUCCESS){
 		fprintf(stderr,"Listen failed!!!\n");
-		apr_pool_destry(server->pool);
-		return();
+		apr_pool_destroy(server->pool);
+		return;
 	}
 
 	for (;;){
 		rv = apr_socket_accept(&socket,server->socket,server->pool);
-		if (ret != APR_SUCCESS){
+		if (rv != APR_SUCCESS){
 			break;
 		}
 	}
@@ -168,7 +169,7 @@ void dispatch_server(ra_module_rec *ralite, char *host, int port, SEXP handler){
 	apr_pool_destroy(server->pool);
 }
 
-void reap_servers(ra_module_rec *ralite){
+void reap_servers(ra_module_rec_t *ralite){
 }
      
 SEXP runRALITE(SEXP host, SEXP port, SEXP handler){
@@ -181,9 +182,9 @@ SEXP runRALITE(SEXP host, SEXP port, SEXP handler){
 	 */
 	if (bg){
 #ifndef WIN32
-		spawn_servers(ralite,host,port,handler,numservers);
+		spawn_servers(ralite,CHAR(STRING_ELT(host,0)),INTEGER(port)[0],handler,numservers);
 #else
-		stop("Cannot fork on Windows!");
+		error("Cannot fork on Windows!");
 #endif
 		return R_NilValue;
 	} 
@@ -192,7 +193,7 @@ SEXP runRALITE(SEXP host, SEXP port, SEXP handler){
 	/* Redirect R callbacks */
 	become_ralite(ralite);
 
-	dispatch_server(ralite,host,port,handler);
+	dispatch_server(ralite,CHAR(STRING_ELT(host,0)),INTEGER(port)[0],handler);
 
 	/* Remove signal handlers*/
 	/* Replace R callbacks */
@@ -212,11 +213,11 @@ void R_init_ralite(DllInfo *info) {
 
 	apr_initialize();
 
-	ralite = Calloc(1,ra_module_rec);
+	ralite = Calloc(1,ra_module_rec_t);
 
 	if (apr_pool_create(&ralite->pool,NULL) != APR_SUCCESS){
 		Free(ralite);
-		stop("FATAL ERROR! apr_pool_create failed!");
+		error("FATAL ERROR! apr_pool_create failed!");
 	};
 
 	apreq_initialize(ralite->pool);
